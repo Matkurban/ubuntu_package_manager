@@ -1,0 +1,31 @@
+display_name: Ubuntu Package Manager
+package_name: ubuntu-package-manager
+maintainer:
+  name: Matkurban
+  email: k3496354336@qq.com
+priority: optional
+section: admin
+installed_size: 30000
+essential: false
+icon: assets/images/logo/logo.png
+
+postinstall_scripts:
+  - echo "Ubuntu Package Manager installed successfully"
+postuninstall_scripts:
+  - echo "Ubuntu Package Manager uninstalled"
+
+keywords:
+  - Ubuntu
+  - Package
+  - Manager
+  - apt
+  - deb
+  - AppImage
+
+generic_name: Package Manager
+
+categories:
+  - System
+  - PackageManager
+
+startup_notify: true

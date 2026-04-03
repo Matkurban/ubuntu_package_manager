@@ -1,0 +1,29 @@
+name: ubuntu_package_manager
+description: "A new Flutter project."
+publish_to: 'none'
+version: 2026.04.04
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  signals: ^6.3.0
+  file_selector: ^1.1.0
+  flutter_svg: ^2.0.9
+  flex_color_scheme: ^8.4.0
+  contact_list_view: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/logo/logo.png

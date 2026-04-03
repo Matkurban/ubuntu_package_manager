@@ -1,0 +1,8 @@
+output: dist/
+releases:
+  - name: linux-deb
+    jobs:
+      - name: build-linux-deb
+        package:
+          platform: linux
+          target: deb

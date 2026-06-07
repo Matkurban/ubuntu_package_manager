@@ -1,5 +1,5 @@
-display_name: Ubuntu Package Manager
-package_name: ubuntu-package-manager
+display_name: Package Manager
+package_name: package-manager
 maintainer:
   name: Matkurban
   email: k3496354336@qq.com
@@ -10,9 +10,9 @@ essential: false
 icon: assets/images/logo/logo.png
 
 postinstall_scripts:
-  - echo "Ubuntu Package Manager installed successfully"
+  - echo "Package Manager installed successfully"
 postuninstall_scripts:
-  - echo "Ubuntu Package Manager uninstalled"
+  - echo "Package Manager uninstalled"
 
 keywords:
   - Ubuntu

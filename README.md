@@ -1,4 +1,4 @@
-# ubuntu_package_manager
+# package-manager
 
 A new Flutter project.
 

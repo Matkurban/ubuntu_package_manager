@@ -1,0 +1,4 @@
+#!/bin/bash
+set -- "/snap/gnome-42-2204/current/command-chain/desktop-launch" "$@"
+# shellcheck source=/dev/null
+source "${SNAP}/snap/command-chain/run"

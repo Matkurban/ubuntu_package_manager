@@ -28,3 +28,7 @@ linter:
 # https://dart.dev/guides/language/analysis-options
 formatter:
   page_width: 100
+
+analyzer:
+  plugins:
+    - signals_lint

@@ -7,7 +7,7 @@ import '../models/package.dart';
 import '../widgets/operation_progress_dialog.dart';
 import '../widgets/package_tile.dart';
 
-class PackagesScreen extends StatefulWidget {
+class PackagesScreen extends SignalStatefulWidget {
   const PackagesScreen({super.key, required this.controller});
 
   final PackagesController controller;
@@ -93,31 +93,35 @@ class _PackagesScreenState extends State<PackagesScreen> {
             hintText: '搜索已安装软件包...',
             leading: const Icon(Icons.search),
             trailing: [
-              Watch((context) {
-                final q = widget.controller.searchQuery.value;
-                if (q.isEmpty) return const SizedBox.shrink();
-                return IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    _searchController.clear();
-                    widget.controller.searchQuery.value = '';
-                  },
-                );
-              }),
-              Watch((context) {
-                final loading = widget.controller.isLoading.value;
-                return IconButton(
-                  icon: loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh),
-                  tooltip: '刷新列表',
-                  onPressed: loading ? null : widget.controller.loadPackages,
-                );
-              }),
+              SignalBuilder(
+                builder: (context) {
+                  final q = widget.controller.searchQuery.value;
+                  if (q.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      _searchController.clear();
+                      widget.controller.searchQuery.value = '';
+                    },
+                  );
+                },
+              ),
+              SignalBuilder(
+                builder: (context) {
+                  final loading = widget.controller.isLoading.value;
+                  return IconButton(
+                    icon: loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh),
+                    tooltip: '刷新列表',
+                    onPressed: loading ? null : widget.controller.loadPackages,
+                  );
+                },
+              ),
             ],
             onChanged: (value) {
               widget.controller.searchQuery.value = value;
@@ -125,81 +129,87 @@ class _PackagesScreenState extends State<PackagesScreen> {
           ),
         ),
         Expanded(
-          child: Watch((context) {
-            final isLoading = widget.controller.isLoading.value;
-            final packages = widget.controller.filteredPackages.value;
-            final error = widget.controller.error.value;
+          child: SignalBuilder(
+            builder: (context) {
+              final isLoading = widget.controller.isLoading.value;
+              final packages = widget.controller.filteredPackages.value;
+              final error = widget.controller.error.value;
 
-            if (isLoading && packages.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('正在加载已安装软件包...'),
-                  ],
+              if (isLoading && packages.isEmpty) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('正在加载已安装软件包...'),
+                    ],
+                  ),
+                );
+              }
+
+              if (error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text('加载失败: $error'),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: widget.controller.loadPackages,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('重试'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (packages.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('没有找到软件包'),
+                    ],
+                  ),
+                );
+              }
+
+              final sorted = [...packages]
+                ..sort(
+                  (a, b) => a.effectiveName.toLowerCase().compareTo(b.effectiveName.toLowerCase()),
+                );
+
+              return RefreshIndicator(
+                onRefresh: widget.controller.loadPackages,
+                child: ContactListView<Package>(
+                  contactsList: sorted,
+                  tag: _tagOf,
+                  stickyHeaderPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemBuilder: (pkg) => PackageTile(
+                    package: pkg,
+                    highlightQuery: widget.controller.searchQuery.value,
+                    isUninstalling: _uninstallingPackage == pkg.name,
+                    onUninstall: () => _confirmUninstall(pkg.name),
+                  ),
+                  stickyHeaderHeight: 32,
                 ),
               );
-            }
-
-            if (error != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
-                    const SizedBox(height: 16),
-                    Text('加载失败: $error'),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: widget.controller.loadPackages,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('重试'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (packages.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('没有找到软件包'),
-                  ],
-                ),
-              );
-            }
-
-            final sorted = [...packages]
-              ..sort(
-                (a, b) => a.effectiveName.toLowerCase().compareTo(b.effectiveName.toLowerCase()),
-              );
-
-            return RefreshIndicator(
-              onRefresh: widget.controller.loadPackages,
-              child: ContactListView<Package>(
-                contactsList: sorted,
-                tag: _tagOf,
-                stickyHeaderPadding: const EdgeInsets.symmetric(horizontal: 24),
-                itemBuilder: (pkg) => PackageTile(
-                  package: pkg,
-                  highlightQuery: widget.controller.searchQuery.value,
-                  isUninstalling: _uninstallingPackage == pkg.name,
-                  onUninstall: () => _confirmUninstall(pkg.name),
-                ),
-                stickyHeaderHeight: 32,
-              ),
-            );
-          }),
+            },
+          ),
         ),
       ],
     );

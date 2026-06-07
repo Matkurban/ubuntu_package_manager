@@ -10,7 +10,7 @@ import '../controllers/packages_controller.dart';
 import '../widgets/app_image_tile.dart';
 import '../widgets/operation_progress_dialog.dart';
 
-class InstallScreen extends StatefulWidget {
+class InstallScreen extends SignalStatefulWidget {
   const InstallScreen({
     super.key,
     required this.debController,
@@ -259,105 +259,109 @@ class _InstallScreenState extends State<InstallScreen> {
             children: [
               // .deb 安装卡
               Expanded(
-                child: Watch((context) {
-                  final checking = widget.debController.isCheckingFile.value;
-                  final installing = widget.debController.isInstalling.value;
-                  final busy = checking || installing;
+                child: SignalBuilder(
+                  builder: (context) {
+                    final checking = widget.debController.isCheckingFile.value;
+                    final installing = widget.debController.isInstalling.value;
+                    final busy = checking || installing;
 
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Icon(Icons.archive_outlined, size: 40, color: colorScheme.primary),
-                          const SizedBox(height: 12),
-                          Text(
-                            '.deb 软件包',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '安装 Debian 格式的本地软件包',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          if (busy)
-                            Column(
-                              children: [
-                                const LinearProgressIndicator(),
-                                const SizedBox(height: 8),
-                                Text(
-                                  checking ? '正在读取包信息…' : '正在安装，请在弹出窗口中授权…',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            )
-                          else
-                            FilledButton.icon(
-                              onPressed: widget.debController.selectFile,
-                              icon: const Icon(Icons.folder_open),
-                              label: const Text('安装 .deb 软件包'),
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Icon(Icons.archive_outlined, size: 40, color: colorScheme.primary),
+                            const SizedBox(height: 12),
+                            Text(
+                              '.deb 软件包',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(
+                              '安装 Debian 格式的本地软件包',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            if (busy)
+                              Column(
+                                children: [
+                                  const LinearProgressIndicator(),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    checking ? '正在读取包信息…' : '正在安装，请在弹出窗口中授权…',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              )
+                            else
+                              FilledButton.icon(
+                                onPressed: widget.debController.selectFile,
+                                icon: const Icon(Icons.folder_open),
+                                label: const Text('安装 .deb 软件包'),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
               ),
               const SizedBox(width: 12),
               // AppImage 添加卡
               Expanded(
-                child: Watch((context) {
-                  final loading = widget.appImageController.isLoading.value;
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Icon(Icons.apps_outlined, size: 40, color: colorScheme.secondary),
-                          const SizedBox(height: 12),
-                          Text(
-                            'AppImage',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '添加并管理免安装的 AppImage 应用',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          if (loading)
-                            const Center(child: CircularProgressIndicator())
-                          else
-                            FilledButton.icon(
-                              onPressed: widget.appImageController.selectAndAddAppImage,
-                              icon: const Icon(Icons.add),
-                              label: const Text('添加 AppImage'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: colorScheme.secondary,
-                                foregroundColor: colorScheme.onSecondary,
-                              ),
+                child: SignalBuilder(
+                  builder: (context) {
+                    final loading = widget.appImageController.isLoading.value;
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Icon(Icons.apps_outlined, size: 40, color: colorScheme.secondary),
+                            const SizedBox(height: 12),
+                            Text(
+                              'AppImage',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(
+                              '添加并管理免安装的 AppImage 应用',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            if (loading)
+                              const Center(child: CircularProgressIndicator())
+                            else
+                              FilledButton.icon(
+                                onPressed: widget.appImageController.selectAndAddAppImage,
+                                icon: const Icon(Icons.add),
+                                label: const Text('添加 AppImage'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: colorScheme.secondary,
+                                  foregroundColor: colorScheme.onSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -365,40 +369,42 @@ class _InstallScreenState extends State<InstallScreen> {
           const SizedBox(height: 24),
 
           // ── 已管理的 AppImage 列表 ──────────────────────────────
-          Watch((context) {
-            final appImages = widget.appImageController.appImages.value;
-            if (appImages.isEmpty) return const SizedBox.shrink();
+          SignalBuilder(
+            builder: (context) {
+              final appImages = widget.appImageController.appImages.value;
+              if (appImages.isEmpty) return const SizedBox.shrink();
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.list, size: 18, color: colorScheme.outline),
-                      const SizedBox(width: 8),
-                      Text(
-                        '已管理的 AppImage（${appImages.length}）',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleSmall?.copyWith(color: colorScheme.outline),
-                      ),
-                    ],
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.list, size: 18, color: colorScheme.outline),
+                        const SizedBox(width: 8),
+                        Text(
+                          '已管理的 AppImage（${appImages.length}）',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleSmall?.copyWith(color: colorScheme.outline),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                ...appImages.map(
-                  (img) => AppImageTile(
-                    appImage: img,
-                    onLaunch: () =>
-                        widget.appImageController.launchAppImage(img.managedPath, img.name),
-                    onRemove: () => _confirmRemoveAppImage(img.id, img.name),
+                  const SizedBox(height: 8),
+                  ...appImages.map(
+                    (img) => AppImageTile(
+                      appImage: img,
+                      onLaunch: () =>
+                          widget.appImageController.launchAppImage(img.managedPath, img.name),
+                      onRemove: () => _confirmRemoveAppImage(img.id, img.name),
+                    ),
                   ),
-                ),
-              ],
-            );
-          }),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

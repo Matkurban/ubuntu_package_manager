@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Ubuntu Package Manager
+Comment=Manage APT and Snap packages on Ubuntu
+GenericName=Package Manager
+Exec=ubuntu-package-manager
+Icon=${SNAP}/meta/gui/ubuntu-package-manager.png
+Terminal=false
+Type=Application
+Categories=System;PackageManager;
+StartupNotify=true
+Keywords=Ubuntu;Package;Manager;apt;deb;snap;AppImage;

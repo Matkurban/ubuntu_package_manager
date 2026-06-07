@@ -18,7 +18,7 @@ class PackagesScreen extends SignalStatefulWidget {
 
 class _PackagesScreenState extends State<PackagesScreen> {
   late final TextEditingController _searchController;
-  String? _uninstallingPackage;
+  Package? _uninstallingPackage;
 
   @override
   void initState() {
@@ -59,12 +59,16 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return RegExp(r'[A-Z]').hasMatch(first) ? first : '#';
   }
 
-  Future<void> _confirmUninstall(String packageName) async {
+  Future<void> _confirmUninstall(Package pkg) async {
+    final message = pkg.source == PackageSource.snap
+        ? '确定要卸载 Snap 应用 "${pkg.effectiveName}" 吗？此操作需要管理员权限。'
+        : '确定要卸载 "${pkg.effectiveName}" 吗？此操作需要管理员权限。';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('确认卸载'),
-        content: Text('确定要卸载 "$packageName" 吗？此操作需要管理员权限。'),
+        content: Text(message),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('取消')),
           FilledButton(
@@ -77,8 +81,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() => _uninstallingPackage = packageName);
-      await widget.controller.uninstallPackage(packageName);
+      setState(() => _uninstallingPackage = pkg);
+      await widget.controller.uninstallPackage(pkg);
     }
   }
 
@@ -202,8 +206,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   itemBuilder: (pkg) => PackageTile(
                     package: pkg,
                     highlightQuery: widget.controller.searchQuery.value,
-                    isUninstalling: _uninstallingPackage == pkg.name,
-                    onUninstall: () => _confirmUninstall(pkg.name),
+                    isUninstalling: _uninstallingPackage == pkg,
+                    onUninstall: () => _confirmUninstall(pkg),
                   ),
                   stickyHeaderHeight: 32,
                 ),

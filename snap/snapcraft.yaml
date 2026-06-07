@@ -1,0 +1,43 @@
+name: ubuntu-package-manager
+version: "2026.4.4"
+title: Ubuntu Package Manager
+summary: Ubuntu Package Manager
+description: |
+  Manage APT and Snap packages, install .deb files, and organize AppImages on Ubuntu.
+license: MIT
+contact: k3496354336@qq.com
+website: https://github.com/Matkurban/ubuntu_package_manager
+source-code: https://github.com/Matkurban/ubuntu_package_manager
+
+confinement: classic
+base: core24
+grade: stable
+
+apps:
+  ubuntu-package-manager:
+    command: ubuntu_package_manager
+    desktop: snap/gui/ubuntu-package-manager.desktop
+
+parts:
+  ubuntu-package-manager:
+    source: .
+    plugin: flutter
+    flutter-target: lib/main.dart
+    build-attributes:
+      - enable-patchelf
+    build-packages:
+      - libgtk-3-dev
+      - libblkid-dev
+      - liblzma-dev
+    stage-packages:
+      - libgtk-3-0
+      - libpcre3
+      - libglib2.0-0
+      - libgdk-pixbuf-2.0-0
+      - libatk-bridge2.0-0
+      - libatspi2.0-0
+      - libxkbcommon0
+      - libwayland-client0
+      - libwayland-cursor0
+      - libwayland-egl1
+      - libepoxy0

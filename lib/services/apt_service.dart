@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import '../models/package.dart';
+import '../utils/desktop_utils.dart';
 
 class AptService {
   /// 获取显示在桌面启动器中的已安装应用（通过 .desktop 文件）
@@ -32,7 +34,7 @@ class AptService {
     for (final path in [...systemFiles, ...userFiles]) {
       try {
         final content = await File(path).readAsString();
-        final info = _parseDesktopEntry(content);
+        final info = parseDesktopEntry(content);
         if (info['Type'] != 'Application') continue;
         if (info['NoDisplay']?.toLowerCase() == 'true') continue;
         if (info['Hidden']?.toLowerCase() == 'true') continue;
@@ -92,7 +94,7 @@ class AptService {
     final iconPathList = await Future.wait(
       entries.map(
         (e) =>
-            e.iconName != null ? _resolveIconPath(e.iconName!, home) : Future<String?>.value(null),
+            e.iconName != null ? resolveIconPath(e.iconName!, home) : Future<String?>.value(null),
       ),
     );
 
@@ -111,6 +113,7 @@ class AptService {
         description: entry.comment,
         installedVersion: pkgName != null ? packageVersions[pkgName] : null,
         isInstalled: true,
+        source: PackageSource.apt,
       );
     }
 
@@ -138,69 +141,4 @@ class _DesktopEntry {
   final String comment;
   final bool isSystem;
   final String? iconName;
-}
-
-/// 解析 .desktop 文件的 [Desktop Entry] 段，返回 key→value 映射。
-Map<String, String> _parseDesktopEntry(String content) {
-  final Map<String, String> result = {};
-  bool inEntry = false;
-
-  for (final rawLine in content.split('\n')) {
-    final line = rawLine.trim();
-    if (line.isEmpty || line.startsWith('#')) continue;
-
-    if (line == '[Desktop Entry]') {
-      inEntry = true;
-      continue;
-    }
-    if (line.startsWith('[')) {
-      if (inEntry) break; // 遇到下一个 section 则停止
-      continue;
-    }
-    if (!inEntry) continue;
-
-    final idx = line.indexOf('=');
-    if (idx <= 0) continue;
-    final key = line.substring(0, idx).trim();
-    final value = line.substring(idx + 1).trim();
-    // 只存无本地化后缀的 key，先出现者优先
-    if (!key.contains('[') && !result.containsKey(key)) {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-
-/// 解析图标名称为绝对文件路径（仅 PNG/SVG，不支持 XPM）。
-/// 按质量优先级依次检查常见图标主题目录。
-Future<String?> _resolveIconPath(String iconName, String home) async {
-  // 已是绝对路径
-  if (iconName.startsWith('/')) {
-    if (await File(iconName).exists()) return iconName;
-    return null;
-  }
-
-  // 去掉可能携带的扩展名
-  final base = iconName.replaceAll(RegExp(r'\.(png|svg|xpm|ico)$', caseSensitive: false), '');
-
-  // 候选路径：hicolor > Yaru（Ubuntu 默认主题）> pixmaps，大图优先
-  final candidates = [
-    '/usr/share/icons/hicolor/256x256/apps/$base.png',
-    '/usr/share/icons/hicolor/128x128/apps/$base.png',
-    '/usr/share/icons/hicolor/64x64/apps/$base.png',
-    '/usr/share/icons/hicolor/48x48/apps/$base.png',
-    '/usr/share/icons/Yaru/256x256/apps/$base.png',
-    '/usr/share/icons/Yaru/48x48/apps/$base.png',
-    '/usr/share/icons/hicolor/scalable/apps/$base.svg',
-    '/usr/share/icons/Yaru/scalable/apps/$base.svg',
-    '/usr/share/pixmaps/$base.png',
-    '/usr/share/pixmaps/$base.svg',
-    '$home/.local/share/icons/hicolor/256x256/apps/$base.png',
-    '$home/.local/share/icons/hicolor/scalable/apps/$base.svg',
-  ];
-
-  for (final path in candidates) {
-    if (await File(path).exists()) return path;
-  }
-  return null;
 }

@@ -1,3 +1,5 @@
+enum PackageSource { apt, snap }
+
 class Package {
   final String name;
   final String? displayName;
@@ -8,6 +10,7 @@ class Package {
   final bool isInstalled;
   final String? size;
   final String? section;
+  final PackageSource source;
 
   const Package({
     required this.name,
@@ -19,6 +22,7 @@ class Package {
     this.isInstalled = false,
     this.size,
     this.section,
+    this.source = PackageSource.apt,
   });
 
   /// Human-readable name: displayName from .desktop, or raw package name.
@@ -34,6 +38,7 @@ class Package {
     bool? isInstalled,
     String? size,
     String? section,
+    PackageSource? source,
   }) {
     return Package(
       name: name ?? this.name,
@@ -45,13 +50,14 @@ class Package {
       isInstalled: isInstalled ?? this.isInstalled,
       size: size ?? this.size,
       section: section ?? this.section,
+      source: source ?? this.source,
     );
   }
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Package && name == other.name;
+      identical(this, other) || other is Package && source == other.source && name == other.name;
 
   @override
-  int get hashCode => name.hashCode;
+  int get hashCode => Object.hash(source, name);
 }

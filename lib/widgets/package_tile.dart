@@ -155,6 +155,7 @@ class PackageTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _PackageSourceChip(source: package.source),
           if (package.description.isNotEmpty)
             Text(
               package.description,
@@ -195,6 +196,7 @@ class _PackageDetailContent extends StatelessWidget {
     final valueStyle = textTheme.bodyMedium;
 
     final rows = <({String label, String value})>[
+      (label: '来源', value: package.source == PackageSource.snap ? 'Snap Store' : 'APT / dpkg'),
       if (package.installedVersion != null) (label: '已安装版本', value: package.installedVersion!),
       if (package.version.isNotEmpty && package.version != package.installedVersion)
         (label: '版本', value: package.version),
@@ -224,6 +226,35 @@ class _PackageDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+class _PackageSourceChip extends StatelessWidget {
+  const _PackageSourceChip({required this.source});
+
+  final PackageSource source;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSnap = source == PackageSource.snap;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: isSnap ? colorScheme.tertiaryContainer : colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          isSnap ? 'Snap' : 'APT',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: isSnap ? colorScheme.onTertiaryContainer : colorScheme.onSecondaryContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -2,11 +2,13 @@ import 'package:signals/signals_flutter.dart';
 
 import '../models/package.dart';
 import '../services/apt_service.dart';
+import '../services/snap_service.dart';
 
 class PackagesController {
-  PackagesController({required this.aptService});
+  PackagesController({required this.aptService, required this.snapService});
 
   final AptService aptService;
+  final SnapService snapService;
 
   final _packages = signal<List<Package>>([]);
   final isLoading = signal(false);
@@ -33,8 +35,13 @@ class PackagesController {
     isLoading.value = true;
     error.value = null;
     try {
-      final list = await aptService.getInstalledPackages();
-      _packages.value = list;
+      final results = await Future.wait([
+        aptService.getInstalledPackages(),
+        snapService.getInstalledPackages(),
+      ]);
+      final merged = [...results[0], ...results[1]]
+        ..sort((a, b) => a.effectiveName.toLowerCase().compareTo(b.effectiveName.toLowerCase()));
+      _packages.value = merged;
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -42,14 +49,18 @@ class PackagesController {
     }
   }
 
-  Future<void> uninstallPackage(String name) async {
+  Future<void> uninstallPackage(Package package) async {
     isLoading.value = true;
     uninstallResult.value = null;
     try {
-      final result = await aptService.removePackage(name);
+      final result = package.source == PackageSource.snap
+          ? await snapService.removePackage(package.name)
+          : await aptService.removePackage(package.name);
       if (result.exitCode == 0) {
-        _packages.value = _packages.value.where((p) => p.name != name).toList();
-        uninstallResult.value = (success: true, message: '已成功卸载 $name');
+        _packages.value = _packages.value
+            .where((p) => !(p.source == package.source && p.name == package.name))
+            .toList();
+        uninstallResult.value = (success: true, message: '已成功卸载 ${package.effectiveName}');
       } else {
         uninstallResult.value = (
           success: false,

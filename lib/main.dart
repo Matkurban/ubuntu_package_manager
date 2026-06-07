@@ -7,15 +7,17 @@ import 'controllers/packages_controller.dart';
 import 'services/app_image_service.dart';
 import 'services/apt_service.dart';
 import 'services/deb_service.dart';
+import 'services/snap_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   final aptService = AptService();
+  final snapService = SnapService();
   final debService = DebService();
   final appImageService = AppImageService();
 
-  final packagesController = PackagesController(aptService: aptService);
+  final packagesController = PackagesController(aptService: aptService, snapService: snapService);
   final debInstallController = DebInstallController(debService: debService);
   final appImageController = AppImageController(appImageService: appImageService);
 

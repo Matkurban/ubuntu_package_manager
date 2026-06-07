@@ -1,4 +1,33 @@
 #!/bin/bash
-set -- "/snap/gnome-42-2204/current/command-chain/desktop-launch" "$@"
-# shellcheck source=/dev/null
-source "${SNAP}/snap/command-chain/run"
+# Classic snap launcher — uses gnome-42-2204 directly without content plug.
+
+SNAP_DESKTOP_RUNTIME="/snap/gnome-42-2204/current"
+ARCH="x86_64-linux-gnu"
+
+export GTK_USE_PORTAL=1
+export SNAP_DESKTOP_RUNTIME
+export GSETTINGS_BACKEND=keyfile
+export DISABLE_ATK_BRIDGE=1
+
+append_dir() {
+  local var="$1" dir="$2"
+  if [ -d "$dir" ]; then
+    eval "export $var=\"\${$var:+\${$var}:}$dir\""
+  fi
+}
+
+append_dir LD_LIBRARY_PATH "$SNAP_DESKTOP_RUNTIME/lib/$ARCH"
+append_dir LD_LIBRARY_PATH "$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH"
+append_dir LD_LIBRARY_PATH "$SNAP_DESKTOP_RUNTIME/usr/lib"
+append_dir LD_LIBRARY_PATH "$SNAP_DESKTOP_RUNTIME/lib"
+append_dir LD_LIBRARY_PATH "$SNAP/lib"
+append_dir PATH "$SNAP_DESKTOP_RUNTIME/usr/bin"
+
+export XKB_CONFIG_ROOT="$SNAP_DESKTOP_RUNTIME/usr/share/X11/xkb"
+export XCURSOR_PATH="$SNAP_DESKTOP_RUNTIME/usr/share/icons"
+export LIBGL_DRIVERS_PATH="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/dri"
+export GIO_MODULE_DIR="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/gio/modules"
+export GI_TYPELIB_PATH="$SNAP_DESKTOP_RUNTIME/usr/lib/girepository-1.0:$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/girepository-1.0"
+export __EGL_VENDOR_LIBRARY_DIRS="$SNAP_DESKTOP_RUNTIME/usr/share/glvnd/egl_vendor.d"
+
+exec "$@"

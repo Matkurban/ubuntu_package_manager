@@ -70,8 +70,28 @@ parts:
         ios/Flutter/ephemeral \
         macos/Flutter/ephemeral \
         windows/flutter/ephemeral
+    override-build: |
+      set -eux
+      FLUTTER_DIR="${CRAFT_PART_BUILD}/flutter-distro"
+      if [ ! -x "${FLUTTER_DIR}/bin/flutter" ]; then
+        rm -rf "${FLUTTER_DIR}"
+        FLUTTER_ARCHIVE="flutter_linux_3.44.1-stable.tar.xz"
+        curl -fL --retry 5 --retry-delay 3 \
+          "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/${FLUTTER_ARCHIVE}" \
+          -o "${CRAFT_PART_BUILD}/${FLUTTER_ARCHIVE}"
+        tar xf "${CRAFT_PART_BUILD}/${FLUTTER_ARCHIVE}" -C "${CRAFT_PART_BUILD}"
+        mv "${CRAFT_PART_BUILD}/flutter" "${FLUTTER_DIR}"
+        rm -f "${CRAFT_PART_BUILD}/${FLUTTER_ARCHIVE}"
+      fi
+      git config --global --add safe.directory "${FLUTTER_DIR}"
+      export PATH="${FLUTTER_DIR}/bin:$PATH"
+      flutter precache --linux
+      flutter pub get
+      flutter build linux --release --verbose --target lib/main.dart
+      cp -a build/linux/*/release/bundle/. "${CRAFT_PART_INSTALL}/"
     override-prime: |
       craftctl default
+      rm -f "${CRAFT_PRIME}/ubuntu_package_manager"
       LIBDIR="${CRAFT_PRIME}/usr/lib/x86_64-linux-gnu"
       if [ -d "${LIBDIR}" ]; then
         for subdir in blas lapack pulseaudio mfx vdpau; do
@@ -121,7 +141,7 @@ parts:
       - gnome-42-2204-sdk
 
   launcher:
-    after: [gnome/sdk]
+    after: [package-manager, gnome/sdk, cleanup]
     plugin: nil
     override-prime: |
       install -D -m755 "${CRAFT_PROJECT_DIR}/snap/local/desktop-launch" "${CRAFT_PRIME}/snap/command-chain/desktop-launch"

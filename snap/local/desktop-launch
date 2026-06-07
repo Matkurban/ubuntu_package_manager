@@ -1,18 +1,27 @@
 #!/bin/bash
-# Classic snap launcher — uses gnome-42-2204 directly without content plug.
+# Classic snap launcher — gnome-42-2204 runtime with host icon/theme integration.
 
 SNAP_DESKTOP_RUNTIME="/snap/gnome-42-2204/current"
+REALHOME="${SNAP_REAL_HOME:-$HOME}"
 ARCH="x86_64-linux-gnu"
 
 export GTK_USE_PORTAL=1
 export SNAP_DESKTOP_RUNTIME
-export GSETTINGS_BACKEND=keyfile
 export DISABLE_ATK_BRIDGE=1
+# Classic: use host dconf/gsettings for icon and cursor themes.
+unset GSETTINGS_BACKEND
+
+prepend_dir() {
+  local var="$1" dir="$2"
+  if [ -d "$dir" ]; then
+    eval "export ${var}=\"${dir}\${${var}:+\${${var}}:}\""
+  fi
+}
 
 append_dir() {
   local var="$1" dir="$2"
   if [ -d "$dir" ]; then
-    eval "export $var=\"\${$var:+\${$var}:}$dir\""
+    eval "export ${var}=\"\${${var}:+\${${var}}:}${dir}\""
   fi
 }
 
@@ -23,11 +32,38 @@ append_dir LD_LIBRARY_PATH "$SNAP_DESKTOP_RUNTIME/lib"
 append_dir LD_LIBRARY_PATH "$SNAP/lib"
 append_dir PATH "$SNAP_DESKTOP_RUNTIME/usr/bin"
 
+# Host icon themes (Yaru, Adwaita, etc.) for GtkHeaderBar window controls.
+prepend_dir XDG_DATA_DIRS "/usr/share"
+prepend_dir XDG_DATA_DIRS "$SNAP_DESKTOP_RUNTIME/usr/share"
+prepend_dir XDG_DATA_DIRS "$SNAP/usr/share"
+
 export XKB_CONFIG_ROOT="$SNAP_DESKTOP_RUNTIME/usr/share/X11/xkb"
-export XCURSOR_PATH="$SNAP_DESKTOP_RUNTIME/usr/share/icons"
+prepend_dir XCURSOR_PATH "/usr/share/icons"
+prepend_dir XCURSOR_PATH "$SNAP_DESKTOP_RUNTIME/usr/share/icons"
+
+if command -v gsettings >/dev/null 2>&1; then
+  cursor_theme=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'")
+  cursor_size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null | tr -d "'")
+  [ -n "$cursor_theme" ] && export XCURSOR_THEME="$cursor_theme"
+  [ -n "$cursor_size" ] && export XCURSOR_SIZE="$cursor_size"
+fi
+
 export LIBGL_DRIVERS_PATH="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/dri"
 export GIO_MODULE_DIR="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/gio/modules"
 export GI_TYPELIB_PATH="$SNAP_DESKTOP_RUNTIME/usr/lib/girepository-1.0:$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/girepository-1.0"
 export __EGL_VENDOR_LIBRARY_DIRS="$SNAP_DESKTOP_RUNTIME/usr/share/glvnd/egl_vendor.d"
+
+append_dir GTK_PATH "$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/gtk-3.0"
+
+# Gdk-pixbuf loaders are required to render symbolic icons in GtkHeaderBar.
+PIXBUF_CACHE="${SNAP_USER_COMMON:-$REALHOME/snap/package-manager/common}/.cache/gdk-pixbuf-loaders.cache"
+PIXBUF_LOADERS="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/gdk-pixbuf-2.0/2.10.0/loaders"
+PIXBUF_QUERY="$SNAP_DESKTOP_RUNTIME/usr/lib/$ARCH/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders"
+mkdir -p "$(dirname "$PIXBUF_CACHE")"
+if [ ! -s "$PIXBUF_CACHE" ] || [ "$SNAP_DESKTOP_RUNTIME" -nt "$PIXBUF_CACHE" ]; then
+  GDK_PIXBUF_MODULEDIR="$PIXBUF_LOADERS" "$PIXBUF_QUERY" > "$PIXBUF_CACHE" 2>/dev/null || true
+fi
+export GDK_PIXBUF_MODULE_FILE="$PIXBUF_CACHE"
+export GDK_PIXBUF_MODULEDIR="$PIXBUF_LOADERS"
 
 exec "$@"
